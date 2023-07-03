@@ -1,4 +1,5 @@
 import pygame
+import pygame_gui
 import sys
 import chess
 import math
@@ -158,8 +159,8 @@ def main(WIN, WIDTH):
     movement = ""
     grid = make_grid(8, WIDTH)
     while True:
-        pygame.time.delay(50) ##stops cpu dying
-        for event in pygame.event.get(): #This quits the program if the player closes the window
+        #pygame.time.delay(10)
+        for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
