@@ -1,8 +1,8 @@
 import pygame
-import pygame_gui
 import sys
 import chess
 import math
+from tkinter import messagebox
 
 from utils import PIECE_IMAGES
 
@@ -15,7 +15,7 @@ WIDTH = 650
 WIN = pygame.display.set_mode((WIDTH, WIDTH))
 pygame.display.set_caption("Crazy Chess")
 WHITE = (238, 238, 211)
-GREY = (118, 150, 86)
+GREEN = (118, 150, 86)
 YELLOW = (204, 204, 0)
 BLUE = (50, 255, 255)
 BLACK = (0, 0, 0)
@@ -48,7 +48,7 @@ def make_grid(rows, width):
             node = Node(i, j, gap)
             grid[i].append(node)
             if (i+j)%2 ==1:
-                grid[i][j].colour = GREY
+                grid[i][j].colour = GREEN
     return grid
 
 def draw_grid(win, rows, width):
@@ -100,7 +100,7 @@ def main(WIN, WIDTH):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-
+            pygame.display.set_caption("Crazy Chess | Your turn")
             if event.type == pygame.MOUSEBUTTONDOWN:
                 node = Find_Node(pygame.mouse.get_pos(), WIDTH)
                 if movement == "":
@@ -109,18 +109,25 @@ def main(WIN, WIDTH):
                         movement = node
                     else:
                         print("Not Valid")
+                elif movement == node:
+                    movement = ""
                 else:
                     movement += node
-                    if not chess.Move.from_uci(movement) in board.legal_moves:
+                    move = chess.Move.from_uci(movement)
+                    if not move in board.legal_moves:
                         print("Not valid move")
                         movement = ""
                     else:
+                        if board.is_capture(move):
+                            print('CAPTURA')
+
                         board.push(chess.Move.from_uci(movement))
                         movement = ""
                         
                         update_display(WIN, grid, 8, WIDTH)
 
                         #IA
+                        pygame.display.set_caption("Crazy Chess | IA turn")
                         movement = machine_move(board.copy())
                         board.push(chess.Move.from_uci(movement))
                         movement = ""
