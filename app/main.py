@@ -120,7 +120,7 @@ def main(WIN, WIDTH):
                         
                         update_display(WIN, grid, 8, WIDTH)
 
-                        #Turno de la maquina
+                        #IA
                         movement = machine_move(board.copy())
                         board.push(chess.Move.from_uci(movement))
                         movement = ""
