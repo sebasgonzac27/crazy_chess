@@ -2,7 +2,7 @@ import pygame
 import sys
 import chess
 import math
-from utils import PIECE_VALUES, POSITION_VALUES
+from utils import PIECE_VALUES, POSITION_VALUES, PIECE_IMAGES
 
 board = chess.Board()
 
@@ -29,43 +29,10 @@ class Node:
 
     def setup(self, WIN, boardM):
         if boardM[self.row][self.col] != "None":
-            image = pygame.image.load(self.getImage(boardM[self.row][self.col]))
+            image = pygame.image.load(PIECE_IMAGES[boardM[self.row][self.col]])
             scaled_image = pygame.transform.scale(image, (int(image.get_width() / 1.8), int(image.get_height() / 1.8)))
             WIN.blit(scaled_image, (self.x, self.y))
-    
-    def getImage(self,letter):
-        if letter == 'r':
-            return "images/black_rook.png"
-        if letter == 'n':
-            return "images/black_knight.png"
-        if letter == 'b':
-            return "images/black_bishop.png"
-        if letter == 'q':
-            return "images/black_queen.png"
-        if letter == 'k':
-            return "images/black_king.png"
-        if letter == 'p':
-            return "images/black_pawn.png"
-        
-        if letter == 'R':
-            return "images/white_rook.png"
-        if letter == 'N':
-            return "images/white_knight.png"
-        if letter == 'B':
-            return "images/white_bishop.png"
-        if letter == 'Q':
-            return "images/white_queen.png"
-        if letter == 'K':
-            return "images/white_king.png"
-        if letter == 'P':
-            return "images/white_pawn.png"
 
-        return ""
-
-        """
-        For now it is drawing a rectangle but eventually we are going to need it
-        to use blit to draw the chess pieces instead
-        """
 
 def make_grid(rows, width):
     grid = []

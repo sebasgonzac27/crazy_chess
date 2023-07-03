@@ -135,3 +135,18 @@ PIECE_VALUES = {
         'Q': -90,
         'K': -900
     }
+
+PIECE_IMAGES = {
+        'p': "images/black_pawn.png",
+        'n': "images/black_knight.png",
+        'b': "images/black_bishop.png",
+        'r': "images/black_rook.png",
+        'q': "images/black_queen.png",
+        'k': "images/black_king.png",
+        'P': "images/white_pawn.png",
+        'N': "images/white_knight.png",
+        'B': "images/white_bishop.png",
+        'R': "images/white_rook.png",
+        'Q': "images/white_queen.png",
+        'K': "images/white_king.png"
+    }
