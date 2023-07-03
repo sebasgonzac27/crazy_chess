@@ -1,2 +1,5 @@
 chess==1.9.4
 pygame==2.4.0
+pygame-ce==2.3.0
+pygame-gui==0.6.9
+python-i18n==0.3.9
