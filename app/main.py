@@ -2,6 +2,7 @@ import pygame
 import sys
 import chess
 import math
+from utils import PIECE_VALUES, POSITION_VALUES
 
 board = chess.Board()
 
@@ -149,37 +150,10 @@ def evaluateBoard(boardCopy,movement):
     for i in range(8):
         for j in range(8):
             piece = str(boardCopy.piece_at(chess.Square((i*8+j))))
-            value += getValueOfPiece(piece)
+            pieceVal = PIECE_VALUES[piece] if piece != 'None' else 0
+            posVal = POSITION_VALUES[piece][i][j] if piece != 'None' else 0
+            value += pieceVal + posVal
     return value
-
-def getValueOfPiece(letter):
-        if letter == 'r':
-            return 50
-        if letter == 'n':
-            return 30
-        if letter == 'b':
-            return 30
-        if letter == 'q':
-            return 90
-        if letter == 'k':
-            return 900
-        if letter == 'p':
-            return 10
-        
-        if letter == 'R':
-            return -50
-        if letter == 'N':
-            return -30
-        if letter == 'B':
-            return -30
-        if letter == 'Q':
-            return -90
-        if letter == 'K':
-            return -900
-        if letter == 'P':
-            return -10
-
-        return 0
 
 def minMaxMax(boardCopy,movement,depth):
     if depth < 0:
