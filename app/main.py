@@ -213,12 +213,13 @@ def main(window, width):
     # Creamos una variable para almacenar el movimiento del jugador.
     movement = ""
 
+    captured_piece = None
+
     # Creamos la cuadrícula del tablero de ajedrez.
     grid = make_grid(8, width)
 
     while True:
         for event in pygame.event.get():
-
             # Si se ejecuta un evento QUIT, se cierra el programa.
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -232,60 +233,78 @@ def main(window, width):
                 # Obtenemos el nodo que ha sido seleccionado.
                 node = find_node(pygame.mouse.get_pos(), width)
 
-                # Si movement es una cadena vacía, significa que el jugador aún
-                # no ha seleccionado ninguna pieza para mover.
-                if movement == "":
-                    # Obtenemos la pieza seleccionada.
-                    piece = board.piece_at(chess.Square(chess.parse_square(node)))
-
-                    # Si la pieza es válida, la asignamos al movimiento.
-                    if piece != None and str(piece).isupper():
-                        movement = node
-                    else:
-                        print("Not Valid")
-
-                # Si movement no es una cadena vacía y es igual al nodo seleccionado,
-                # significa que el jugador ha hecho clic nuevamente en la misma pieza
-                # para cancelar la selección.
-                elif movement == node:
+                # Si hay una ficha capturada se coloca en la casilla seleccionada.
+                if captured_piece:
+                    # Se convierte la casilla a formato chess.
+                    square = chess.parse_square(node)
+                    # Se convierte la pieza a formato chess.
+                    new_piece = chess.Piece(captured_piece.piece_type, not captured_piece.color)
+                    # Se coloca la pieza en la casilla seleccionada.
+                    board.set_piece_at(square, new_piece)
+                    # Reiniciamos la variable de pieza capturada.
+                    captured_piece = None
+                    # Sigue la IA.
+                    IA_turn(window, grid, width)
                     movement = ""
-
-                # Si movement no es una cadena vacía y es diferente del nodo seleccionado,
-                # significa que el jugador ha seleccionado un nodo de destino para su movimiento.
                 else:
-                    # Agregamos el nodo al final de la cadena movement.
-                    movement += node
+                    # Si movement es una cadena vacía, significa que el jugador aún
+                    # no ha seleccionado ninguna pieza para mover.
+                    if movement == "":
+                        # Obtenemos la pieza seleccionada.
+                        piece = board.piece_at(chess.Square(chess.parse_square(node)))
 
-                    # Realizamos el movimiento.
-                    move = chess.Move.from_uci(movement)
+                        # Si la pieza es válida, la asignamos al movimiento.
+                        if piece is not None and str(piece).isupper():
+                            movement = node
+                        else:
+                            print("Not Valid")
 
-                    # Verificamos si el movimiento no es válido.
-                    if move not in board.legal_moves:
-                        print("Not valid move")
+                    # Si movement no es una cadena vacía y es igual al nodo seleccionado,
+                    # significa que el jugador ha hecho clic nuevamente en la misma pieza
+                    # para cancelar la selección.
+                    elif movement == node:
                         movement = ""
 
-                    # Si es válido, realizamos el movimiento y actualizamos el tablero.
+                    # Si movement no es una cadena vacía y es diferente del nodo seleccionado,
+                    # significa que el jugador ha seleccionado un nodo de destino para su movimiento.
                     else:
-                        if board.is_capture(move):
-                            print('CAPTURA')
+                        # Agregamos el nodo al final de la cadena movement.
+                        movement += node
 
-                        board.push(chess.Move.from_uci(movement))
-                        movement = ""
-                        update_display(window, grid, 8, width)
+                        # Realizamos el movimiento.
+                        move = chess.Move.from_uci(movement)
 
-                        # Después del turno del jugador, indicamos que es turno de la IA.
-                        pygame.display.set_caption("Crazy Chess | IA turn")
+                        # Verificamos si el movimiento no es válido.
+                        if move not in board.legal_moves:
+                            print("Not valid move")
+                            movement = ""
 
-                        # La máquina selecciona el movimiento a hacer.
-                        movement = machine_move(board.copy())
+                        # Si es válido, realizamos el movimiento y actualizamos el tablero.
+                        else:
+                            if board.is_capture(move):
+                                captured_piece = board.piece_at(chess.Square(chess.parse_square(node)))
+                                print(f"Captured: {captured_piece}")
 
-                        # Realiza el movimiento.
-                        board.push(chess.Move.from_uci(movement))
-                        movement = ""
+                            board.push(chess.Move.from_uci(movement))
+                            movement = ""
+
+                            if not captured_piece:
+                                # Sigue la IA.
+                                IA_turn(window, grid, width)
+                                movement = ""
 
             update_display(window, grid, 8, width)
 
 
+def IA_turn(window, grid, width):
+    # Actualizar el tablero y sigue la IA.
+    update_display(window, grid, 8, width)
+    # Después del turno del jugador, indicamos que es turno de la IA.
+    pygame.display.set_caption("Crazy Chess | IA turn")
+    # La máquina selecciona el movimiento a hacer.
+    movement = machine_move(board.copy())
+    # Realiza el movimiento.
+    board.push(chess.Move.from_uci(movement))
 
 # Ejecutamos el juego.
 main(WIN, WIDTH)
