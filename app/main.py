@@ -209,15 +209,18 @@ def main(window, width):
                 if captured_piece:
                     # Se convierte la casilla a formato chess.
                     square = chess.parse_square(node)
-                    # Se convierte la pieza a formato chess.
-                    new_piece = chess.Piece(captured_piece.piece_type, not captured_piece.color)
-                    # Se coloca la pieza en la casilla seleccionada.
-                    board.set_piece_at(square, new_piece)
-                    # Reiniciamos la variable de pieza capturada.
-                    captured_piece = None
-                    # Sigue la IA.
-                    IA_turn(window, grid, width)
-                    movement = ""
+                    if not board.piece_at(square):
+                        # Se convierte la pieza a formato chess.
+                        new_piece = chess.Piece(captured_piece.piece_type, not captured_piece.color)
+                        # Se coloca la pieza en la casilla seleccionada.
+                        board.set_piece_at(square, new_piece)
+                        # Reiniciamos la variable de pieza capturada.
+                        captured_piece = None
+                        # Sigue la IA.
+                        IA_turn(window, grid, width)
+                        movement = ""
+                    else:
+                        print("There is a piece in this square, please try put in other square.")
                 else:
                     # Si movement es una cadena vacía, significa que el jugador aún
                     # no ha seleccionado ninguna pieza para mover.
