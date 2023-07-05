@@ -209,7 +209,7 @@ def alphabeta_pruning_alt(board, piece, square, depth, alpha, beta, maximizing_p
             beta = min(beta, value)
 
         return value
-    
+
 
 def evaluate_board_alt(board, square, piece):
     """
