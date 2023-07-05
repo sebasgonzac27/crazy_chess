@@ -3,7 +3,7 @@ import sys
 import chess
 import math
 
-from AI import alphabeta_pruning
+from AI import machine_move, put_piece
 from utils import PIECE_IMAGES
 
 
@@ -175,34 +175,6 @@ def find_node(pos, width):
 
     return pos
 
-
-
-def machine_move(board):
-    """
-    Realiza el movimiento por parte de la máquina.
-
-        board : tablero de ajedrez.
-    """
-    maximum = -(math.inf)
-    movement = ""
-
-    # Obtenemos todos los movimientos legales disponibles en el tablero.
-    legal_moves = [str(mov) for mov in board.legal_moves]
-
-    # Para cada movimiento legal se realiza la poda alpha-beta con una profundidad
-    # máxima de 3 y un indicador False para señalar que es el turno de la máquina.
-    for move in legal_moves:
-        result = alphabeta_pruning(board.copy(), move, 3, -(math.inf), math.inf, False)
-
-        # Se busca que el movimiento tenga el máximo valor.
-        if result > maximum:
-            movement = move
-            maximum = result
-
-    return movement
-
-
-
 def main(window, width):
     """
     Función principal que ejecuta el juego de ajedrez.
@@ -299,12 +271,30 @@ def main(window, width):
 def IA_turn(window, grid, width):
     # Actualizar el tablero y sigue la IA.
     update_display(window, grid, 8, width)
+
     # Después del turno del jugador, indicamos que es turno de la IA.
     pygame.display.set_caption("Crazy Chess | IA turn")
+
+    # Realizamos una copia del tablero para evaluar si hay captura y obtener la ficha capturada.
+    board_copy = board.copy()
+    
     # La máquina selecciona el movimiento a hacer.
-    movement = machine_move(board.copy())
+    movement = machine_move(board_copy)
     # Realiza el movimiento.
     board.push(chess.Move.from_uci(movement))
+
+    is_capture = board_copy.is_capture(chess.Move.from_uci(movement))
+    if is_capture:
+        # Actualizar el tablero y coloca la ficha.
+        update_display(window, grid, 8, width)
+        captured_piece_square = movement[-2:]
+        captured_piece = board_copy.piece_at(chess.Square(chess.parse_square(captured_piece_square)))
+        print(f"Captured: {captured_piece}")
+        square = put_piece(board.copy(), captured_piece)
+        # Se convierte la pieza a formato chess.
+        piece = chess.Piece(captured_piece.piece_type, not captured_piece.color)
+        # Se coloca la pieza en la casilla seleccionada.
+        board.set_piece_at(square, piece)
 
 # Ejecutamos el juego.
 main(WIN, WIDTH)
