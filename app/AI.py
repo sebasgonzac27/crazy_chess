@@ -3,6 +3,33 @@ import math
 
 from utils import PIECE_VALUES, POSITION_VALUES
 
+# ============================================================
+#              MOVIMIENTOS ESTÁNDAR DE LAS FICHAS
+# ============================================================
+
+def machine_move(board):
+    """
+    Realiza el movimiento por parte de la máquina.
+
+        board : tablero de ajedrez.
+    """
+    maximum = -(math.inf)
+    movement = ""
+
+    # Obtenemos todos los movimientos legales disponibles en el tablero.
+    legal_moves = [str(mov) for mov in board.legal_moves]
+
+    # Para cada movimiento legal se realiza la poda alpha-beta con una profundidad
+    # máxima de 3 y un indicador False para señalar que es el turno de la máquina.
+    for move in legal_moves:
+        result = alphabeta_pruning(board.copy(), move, 3, -(math.inf), math.inf, False)
+
+        # Se busca que el movimiento tenga el máximo valor.
+        if result > maximum:
+            movement = move
+            maximum = result
+
+    return movement
 
 
 def alphabeta_pruning(board, movement, depth, alpha, beta, maximizing_player):
@@ -96,86 +123,123 @@ def evaluate_board(board, movement):
 
     return value
 
-
-
-def min_max_max(board, movement, depth):
+# ============================================================
+#                 POSICIONAR FICHAS ROBADAS
+# ============================================================
+def put_piece(board, piece):
     """
-    Implementa el algoritmo Minimax para la búsqueda del mejor movimiento.
-    Esta función busca el movimiento que maximiza el valor de evaluación en
-    un nivel determinado del árbol de búsqueda.
-
-        board : estado del tablero.
-        movement : movimiento actual.
-        depth : profundidad actual de la búsqueda.
+    Coloca la ficha robada por parte de la máquina.
+        board : tablero de ajedrez.
     """
-    # Si la profundidad es menor a 0, se alcanzó el nivel máximo de profundidad.
-    if depth < 0:
-        value = evaluate_board(board, movement)
-
-        return {
-            "value": value,
-            "movement": movement
-        }
-
-    # Aplicamos el movimiento al tablero actual.
-    board.push(chess.Move.from_uci(movement))
-
-    # Inicializamos la variable como -Infinite.
     maximum = -(math.inf)
+    movement = ""
 
-    # Obtenemos todas las jugadas legales disponibles en el tablero.
-    legal_moves = [str(mov) for mov in board.legal_moves]
+    # Obtenemos las casillas que están vacías en el tablero.
+    empty_squares = [square for square in chess.SQUARES if board.piece_at(square) is None]
 
-    result = {}
+    # Para cada movimiento legal se realiza la poda alpha-beta con una profundidad
+    # máxima de 3 y un indicador False para señalar que es el turno de la máquina.
+    for square in empty_squares:
+        result = alphabeta_pruning_alt(board.copy(), piece, square, 3, -(math.inf), math.inf, False)
 
-    # Para cada movimiento legal obtenemos aquel con la mayor puntuación.
-    for move in legal_moves:
-       evaluation = min_max_min(board.copy(), move, depth-1)
+        # Se busca que el movimiento tenga el máximo valor.
+        if result > maximum:
+            movement = square
+            maximum = result
 
-       if  evaluation["value"] > maximum:
-            maximum = evaluation["value"]
-            result = evaluation
+    return movement
 
-    return result
-
-
-
-def min_max_min(board, movement, depth):
+def alphabeta_pruning_alt(board, piece, square, depth, alpha, beta, maximizing_player):
     """
-    Implementa el algoritmo Minimax para la búsqueda del mejor movimiento.
-    Esta función busca el movimiento que minimiza el valor de evaluación en
-    un nivel determinado del árbol de búsqueda.
+    Implementa la poda alpha-beta.
+
+        board : estado actual del tablero.
+        square : casilla actual.
+        depth : profundidad actual del árbol de búsqueda.
+        alpha : valor alfa.
+        beta : valor beta.
+        maximizing_player : indicador que especifica si el jugador actual está
+                            maximizando o minimizando.
+    """
+    # Verificamos si hemos alcanzado la profundidad máxima de búsqueda.
+    if depth == 0:
+        return evaluate_board_alt(board, square, piece)
+
+    # TODO: Colocar la ficha.board.push(chess.Move.from_uci(movement))
+    # Se convierte la pieza a formato chess.
+    piece = chess.Piece(piece.piece_type, not piece.color)
+    # Se coloca la pieza en la casilla seleccionada.
+    board.set_piece_at(square, piece)
+
+    # Obtenemos las casillas que están vacías en el tablero.
+    empty_squares = [square for square in chess.SQUARES if board.piece_at(square) is None]
+
+    # Si el jugador en el nivel actual del árbol es el jugador maximizador,
+    # se realiza una búsqueda maximizadora.
+    if maximizing_player:
+        # Inicializamos value como -Infinite.
+        value = -(math.inf)
+
+        # Para cada movimiento se reliza una llamada recursiva de alphabeta_pruning()
+        # con una profundidad reducida de 1 y se invierte el valor de maximizing_player.
+        for square in empty_squares:
+            value = max(value, alphabeta_pruning_alt(board.copy(), piece, square, depth-1, -(math.inf), math.inf, False))
+
+            # Si value es mayor o igual a beta, se realiza el corte beta y se sale del bucle,
+            # ya que se ha encontrado un valor que el jugador minimizador no permitiría.
+            if value >= beta:
+                break
+
+            alpha = max(alpha, value)
+
+        return value
+
+    # Si no, se realiza una búsqueda minimizadora.
+    else:
+        # Inicializamos value como +Infinite.
+        value = (math.inf)
+
+        for square in empty_squares:
+            value = max(value, alphabeta_pruning_alt(board.copy(), piece, square, depth-1, -(math.inf), math.inf, True))
+
+            # Si value es menor o igual que alpha se realiza el corte alpha y se sale del bucle.
+            if value <= alpha:
+                break
+
+            beta = min(beta, value)
+
+        return value
+    
+
+def evaluate_board_alt(board, square, piece):
+    """
+    Evalúa el estado del tablero en función de los valores asignados a las
+    piezas y las posiciones.
 
         board : estado del tablero.
         movement : movimiento actual.
-        depth : profundidad actual de la búsqueda.
     """
-    # Si la profundidad es menor a 0, se alcanzó el nivel máximo de profundidad.
-    if depth < 0:
-        value = evaluate_board(board, movement)
+    # Creamos un acumulador para la puntuación de la evaluación.
+    value = 0
 
-        return {
-            "value": value,
-            "movement": movement
-        }
+    # Se convierte la pieza a formato chess.
+    piece = chess.Piece(piece.piece_type, not piece.color)
+    # Se coloca la pieza en la casilla seleccionada.
+    board.set_piece_at(square, piece)
 
-    # Aplicamos el movimiento al tablero actual.
-    board.push(chess.Move.from_uci(movement))
+    # Recorremos todas las casillas del tablero.
+    for i in range(8):
+        for j in range(8):
+            # Para cada casilla obtenemos la pieza en esa posición.
+            piece = str(board.piece_at(chess.Square((i * 8 + j))))
 
-    # Inicializamos la variable como +Infinite.
-    minimum = math.inf
+            # Obtenemos el valor asignado a la pieza.
+            # Si no hay pieza en esa casilla, se asigna un valor de 0.
+            piece_val = PIECE_VALUES[piece] if piece != 'None' else 0
 
-    # Obtenemos todas las jugadas legales disponibles en el tablero.
-    legal_moves = [str(mov) for mov in board.legal_moves]
+            # Obtenemos el valor asignado a la posición de la pieza.
+            pos_val = POSITION_VALUES[piece][i][j] if piece != 'None' else 0
 
-    result = {}
+            value += piece_val + pos_val
 
-    # Para cada movimiento legal obtenemos aquel con la menor puntuación.
-    for move in legal_moves:
-       evaluation = min_max_max(board.copy(), move, depth-1)
-
-       if  evaluation["Value"] < minimum:
-            minimum = evaluation["Value"]
-            result = evaluation
-
-    return result
+    return value
