@@ -297,7 +297,7 @@ def main(window, width):
                         captured_piece = None
                         
                         # Sigue la IA.
-                        ia_turn(window, grid, width)
+                        IA_turn(window, grid, width)
                         movement = ""
                     else:
                         
