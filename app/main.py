@@ -96,7 +96,7 @@ def draw_letters_numbers(window):
     """
     
     list_letters = ["A", "B", "C", "D", "E", "F", "G", "H"]
-    list_numbers = ["1", "2", "3", "4", "5", "6", "7", "8"]
+    list_numbers = ["8", "7", "6", "5", "4", "3", "2", "1"]
     x,y = 15,70
     x2,y2 = 76,697
     for i in range(8):
