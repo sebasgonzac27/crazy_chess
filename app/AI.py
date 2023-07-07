@@ -134,20 +134,35 @@ def put_piece(board, piece):
     maximum = -(math.inf)
     movement = ""
 
+    # Determina las coordenadas de la cuadrícula central 4x4
+    start_row = 2
+    end_row = 6
+    start_col = 2
+    end_col = 6
+
+    # Obtiene las casillas vacías en la cuadrícula central
+    # empty_squares = []
+    # for row in range(start_row, end_row + 1):
+    #     for col in range(start_col, end_col + 1):
+    #         square = chess.square(col, row)
+    #         if board.piece_at(square) is None:
+    #             empty_squares.append(square)
+
     # Obtenemos las casillas que están vacías en el tablero.
     empty_squares = [square for square in chess.SQUARES if board.piece_at(square) is None]
 
-    # Para cada movimiento legal se realiza la poda alpha-beta con una profundidad
+    # Para cada movimiento legal realiza la poda alpha-beta con una profundidad
     # máxima de 3 y un indicador False para señalar que es el turno de la máquina.
     for square in empty_squares:
         result = alphabeta_pruning_alt(board.copy(), piece, square, 3, -(math.inf), math.inf, False)
 
-        # Se busca que el movimiento tenga el máximo valor.
+        # Busca el movimiento con el máximo valor.
         if result > maximum:
             movement = square
             maximum = result
 
     return movement
+
 
 def alphabeta_pruning_alt(board, piece, square, depth, alpha, beta, maximizing_player):
     """
