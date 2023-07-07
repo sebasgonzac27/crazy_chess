@@ -253,6 +253,7 @@ def main(window, width):
 
             # Establecemos el título de la ventana de juego.
             pygame.display.set_caption("Crazy Chess | Your turn")
+
             # Si se presiona el mouse.
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # Obtenemos el nodo que ha sido seleccionado.
@@ -296,7 +297,7 @@ def main(window, width):
                         captured_piece = None
                         
                         # Sigue la IA.
-                        IA_turn(window, grid, width)
+                        ia_turn(window, grid, width)
                         movement = ""
                     else:
                         
@@ -331,8 +332,8 @@ def main(window, width):
 
                         # Verificamos si el movimiento no es válido.
                         if move not in board.legal_moves:
-                            print("Not valid move")
-                            movement = ""
+                            print('Not valid move')
+                            movement = ''
 
                         # Si es válido, realizamos el movimiento y actualizamos el tablero.
                         else:
@@ -346,7 +347,6 @@ def main(window, width):
                             if not captured_piece:
                                 # Sigue la IA.
                                 IA_turn(window, grid, width)
-                                grid[prev_x][prev_y].selected = False
                                 movement = ""
             
             update_display(window, grid, 8, width, 0)
@@ -367,7 +367,6 @@ def get_node_position(node, width):
 
 
 def IA_turn(window, grid, width):
-
     # Actualizar el tablero y sigue la IA.
     
     update_display(window, grid, 8, width, 1)
@@ -375,32 +374,16 @@ def IA_turn(window, grid, width):
     pygame.display.set_caption("Crazy Chess | IA turn")
     # Realizamos una copia del tablero para evaluar si hay captura y obtener la ficha capturada.
     board_copy = board.copy()
-    
+
     # La máquina selecciona el movimiento a hacer.
     movement = machine_move(board_copy)
     # Realiza el movimiento.
     board.push(chess.Move.from_uci(movement))
 
     is_capture = board_copy.is_capture(chess.Move.from_uci(movement))
-    # Calculamos el ancho de cada nodo.
-    interval = width / 8
-
-    arreglo = ['A', 'B', 'C' , 'D' , 'E' , 'F' , 'G' , 'H']
-    col, row = movement[-2], movement[-1]
-    col = arreglo.index(col.upper())
-
-    x,y = int(col), 8 - (int(row))
-
-    for i in range(8):
-        for j in range(8):
-            grid[i][j].selected = False
-
-    if not grid[y][x].selected:
-        grid[y][x].selected = True
-
     if is_capture:
         # Actualizar el tablero y coloca la ficha.
-        update_display(window, grid, 8, width,1)
+        update_display(window, grid, 8, width)
         captured_piece_square = movement[-2:]
         captured_piece = board_copy.piece_at(chess.Square(chess.parse_square(captured_piece_square)))
         print(f"Captured: {captured_piece}")
@@ -409,8 +392,6 @@ def IA_turn(window, grid, width):
         piece = chess.Piece(captured_piece.piece_type, not captured_piece.color)
         # Se coloca la pieza en la casilla seleccionada.
         board.set_piece_at(square, piece)
-    update_display(window, grid, 8, width, 1)
-    
 
 # Ejecutamos el juego.
 main(WIN, WIDTH)
