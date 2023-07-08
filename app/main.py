@@ -26,7 +26,7 @@ pygame.display.set_caption("Crazy Chess")
 WHITE = (238, 238, 211)
 GREEN = (118, 150, 86)
 GREEN2 = (88, 117, 69)
-YELLOW = (255, 218, 33)
+YELLOW = (255, 218, 33, 100)
 BLUE = (50, 255, 255)
 BLACK = (0, 0, 0)
 
@@ -54,6 +54,7 @@ class Node:
         self.y = int(row * width) + PADDING / 2
         self.colour = WHITE
         self.selected = False
+        self.posible = False
         
 
 
@@ -66,7 +67,9 @@ class Node:
         """
         if self.selected:
             pygame.draw.rect(window, YELLOW, (self.x, self.y, (WIDTH / 8), (WIDTH / 8)))
-        else: pygame.draw.rect(window, self.colour, (self.x, self.y, (WIDTH / 8),(WIDTH / 8) ))
+        elif self.posible:
+            pygame.draw.circle(window, YELLOW,(self.x + ((WIDTH / 8)/2) , self.y + ((WIDTH / 8)/2)) , 15)
+        else : pygame.draw.rect(window, self.colour, (self.x, self.y, (WIDTH / 8),(WIDTH / 8) ))
 
 
     def setup(self, window, matrix):
@@ -96,7 +99,7 @@ def draw_letters_numbers(window):
     """
     
     list_letters = ["A", "B", "C", "D", "E", "F", "G", "H"]
-    list_numbers = ["8", "7", "6", "5", "4", "3", "2", "1g"]
+    list_numbers = ["8", "7", "6", "5", "4", "3", "2", "1"]
     x,y = 15,70
     x2,y2 = 76,697
     for i in range(8):
@@ -200,7 +203,7 @@ def update_display(window, grid, rows, width, turn):
 
 
 
-def find_node(pos, width):
+def find_node(pos, width,grid):
     """
     Encuentra la posición del nodo en el tablero de ajedrez a partir de una posición
     dada en píxeles en la ventana del juego.
@@ -224,10 +227,39 @@ def find_node(pos, width):
 
     # Obtenemos la posicíon del nodo en la notación del ajedrez.
     pos = "" + ['a','b','c','d','e','f','g','h'][x] + f"{8 - y}"
-
+    find_legal_moves(board, pos, grid)
     return pos
 
-def main(window, width):
+def find_legal_moves(board, pos,grid):
+
+    for i in range(8):
+                for j in range(8):
+                    grid[i][j].posible = False
+
+    square = chess.parse_square(pos)
+    piece = board.piece_at(square)
+
+    if piece is not None and piece.color == board.turn:
+        # Obtiene los movimientos legales para la ficha
+        legal_moves = board.legal_moves
+        # Filtra los movimientos legales para la ficha en particular
+        moves_for_piece = [move for move in legal_moves if move.from_square == square]
+
+        # Imprime los movimientos permitidos
+        for move in moves_for_piece:
+            mov = move.uci()
+            col = mov[2]
+            row = mov[3]
+            arreglo = ['a', 'b', 'c' , 'd' , 'e' , 'f' , 'g' , 'h']
+            col = arreglo.index(col)
+            col,row = int(col),int(row) - 1
+            row = 7 - row
+            if not grid[row][col].posible:
+                grid[row][col].posible = True
+    
+            
+
+def main(window, width,grid):
     
     """
     Función principal que ejecuta el juego de ajedrez.
@@ -237,7 +269,6 @@ def main(window, width):
     """
     # Creamos una variable para almacenar el movimiento del jugador.
     movement = ""
-    turn_text(window, 0)
     captured_piece = None
     prev_x = None
     prev_y = None
@@ -255,99 +286,104 @@ def main(window, width):
             pygame.display.set_caption("Crazy Chess | Your turn")
             # Si se presiona el mouse.
             if event.type == pygame.MOUSEBUTTONDOWN:
-                # Obtenemos el nodo que ha sido seleccionado.
-                node = find_node(pygame.mouse.get_pos(), width)
+                cord_validas = pygame.mouse.get_pos()
+                x,y = cord_validas
 
-                click_p = pygame.mouse.get_pos()
+                if x >= 40 and x <= 690  and y >= 40 and y <= 690:
+                    # Obtenemos el nodo que ha sido seleccionado.
+                    node = find_node(pygame.mouse.get_pos(), width,grid)
 
-                # Calculamos el ancho de cada nodo.
-                interval = width / 8
-                # Definimos la fila y columna del nodo.
-                y, x = click_p
+                    click_p = pygame.mouse.get_pos()
 
-                y = y - PADDING / 2
-                x = x - PADDING / 2
+                    # Calculamos el ancho de cada nodo.
+                    interval = width / 8
+                    # Definimos la fila y columna del nodo.
+                    y, x = click_p
 
-                row = y // interval
-                col = x // interval
-                x,y = int(col), int(row)
+                    y = y - PADDING / 2
+                    x = x - PADDING / 2
 
-                if prev_x and prev_y:
-                    grid[prev_x][prev_y].selected = False
-                
-                if not grid[x][y].selected:
-                    grid[x][y].selected = True
+                    row = y // interval
+                    col = x // interval
+                    x,y = int(col), int(row)
 
-                prev_x, prev_y = x,y
-
-                # Si hay una ficha capturada se coloca en la casilla seleccionada.
-                if captured_piece:
-
+                    if prev_x and prev_y:
+                        grid[prev_x][prev_y].selected = False
                     
+                    if not grid[x][y].selected:
+                        grid[x][y].selected = True
 
-                    # Se convierte la casilla a formato chess.
-                    square = chess.parse_square(node)
-                    if not board.piece_at(square):
-                        # Se convierte la pieza a formato chess.
-                        new_piece = chess.Piece(captured_piece.piece_type, not captured_piece.color)
-                        # Se coloca la pieza en la casilla seleccionada.
-                        board.set_piece_at(square, new_piece)
-                        # Reiniciamos la variable de pieza capturada.
-                        captured_piece = None
-                        
-                        # Sigue la IA.
-                        IA_turn(window, grid, width)
-                        movement = ""
-                    else:
-                        
-                        print("There is a piece in this square, please try put in other square.")
-                else:
-                    # Si movement es una cadena vacía, significa que el jugador aún
-                    # no ha seleccionado ninguna pieza para mover.
-                    if movement == "":
-                        # Obtenemos la pieza seleccionada.
-                        piece = board.piece_at(chess.Square(chess.parse_square(node)))
+                    prev_x, prev_y = x,y
 
-                        # Si la pieza es válida, la asignamos al movimiento.
-                        if piece is not None and str(piece).isupper():
-                            movement = node
+                    # Si hay una ficha capturada se coloca en la casilla seleccionada.
+                    if captured_piece:
+
+                        
+
+                        # Se convierte la casilla a formato chess.
+                        square = chess.parse_square(node)
+                        if not board.piece_at(square):
+                            # Se convierte la pieza a formato chess.
+                            new_piece = chess.Piece(captured_piece.piece_type, not captured_piece.color)
+                            # Se coloca la pieza en la casilla seleccionada.
+                            board.set_piece_at(square, new_piece)
+                            # Reiniciamos la variable de pieza capturada.
+                            captured_piece = None
+                            
+                            # Sigue la IA.
+                            IA_turn(window, grid, width)
+                            movement = ""
                         else:
-                            print("Not Valid")
-
-                    # Si movement no es una cadena vacía y es igual al nodo seleccionado,
-                    # significa que el jugador ha hecho clic nuevamente en la misma pieza
-                    # para cancelar la selección.
-                    elif movement == node:
-                        movement = ""
-
-                    # Si movement no es una cadena vacía y es diferente del nodo seleccionado,
-                    # significa que el jugador ha seleccionado un nodo de destino para su movimiento.
+                            
+                            print("There is a piece in this square, please try put in other square.")
                     else:
-                        # Agregamos el nodo al final de la cadena movement.
-                        movement += node
+                        # Si movement es una cadena vacía, significa que el jugador aún
+                        # no ha seleccionado ninguna pieza para mover.
+                        if movement == "":
+                            # Obtenemos la pieza seleccionada.
+                            piece = board.piece_at(chess.Square(chess.parse_square(node)))
 
-                        # Realizamos el movimiento.
-                        move = chess.Move.from_uci(movement)
+                            # Si la pieza es válida, la asignamos al movimiento.
+                            if piece is not None and str(piece).isupper():
+                                movement = node
+                            
+                            else:
+                                print("Not Valid")
 
-                        # Verificamos si el movimiento no es válido.
-                        if move not in board.legal_moves:
-                            print("Not valid move")
+                        # Si movement no es una cadena vacía y es igual al nodo seleccionado,
+                        # significa que el jugador ha hecho clic nuevamente en la misma pieza
+                        # para cancelar la selección.
+                        elif movement == node:
                             movement = ""
 
-                        # Si es válido, realizamos el movimiento y actualizamos el tablero.
+                        # Si movement no es una cadena vacía y es diferente del nodo seleccionado,
+                        # significa que el jugador ha seleccionado un nodo de destino para su movimiento.
                         else:
-                            if board.is_capture(move):
-                                captured_piece = board.piece_at(chess.Square(chess.parse_square(node)))
-                                print(f"Captured: {captured_piece}")
-
-                            board.push(chess.Move.from_uci(movement))
-                            movement = ""
-
-                            if not captured_piece:
-                                # Sigue la IA.
-                                IA_turn(window, grid, width)
-                                grid[prev_x][prev_y].selected = False
+                            # Agregamos el nodo al final de la cadena movement.
+                            movement += node
+                            print(movement)
+                            # Realizamos el movimiento.
+                            move = chess.Move.from_uci(movement)
+                            # Verificamos si el movimiento no es válido.
+                            if move not in board.legal_moves:
+                                print("Not valid move")
+        
                                 movement = ""
+
+                            # Si es válido, realizamos el movimiento y actualizamos el tablero.
+                            else:
+                                if board.is_capture(move):
+                                    captured_piece = board.piece_at(chess.Square(chess.parse_square(node)))
+                                    print(f"Captured: {captured_piece}")
+
+                                board.push(chess.Move.from_uci(movement))
+                                movement = ""
+
+                                if not captured_piece:
+                                    # Sigue la IA.
+                                    IA_turn(window, grid, width)
+                                    grid[prev_x][prev_y].selected = False
+                                    movement = ""
             
             update_display(window, grid, 8, width, 0)
             
@@ -413,4 +449,4 @@ def IA_turn(window, grid, width):
     
 
 # Ejecutamos el juego.
-main(WIN, WIDTH)
+main(WIN, WIDTH,grid=make_grid(8, WIDTH))
